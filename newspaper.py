@@ -156,6 +156,14 @@ Choose an operation:
 
 
 def menu(conn) -> None:
+    """Interactive loop. Ends on choice 7, Ctrl+C, or when input runs out (Ctrl+D or no terminal)."""
+    try:
+        run_menu(conn)
+    except (EOFError, KeyboardInterrupt):
+        print("\nGoodbye!")
+
+
+def run_menu(conn) -> None:
     while True:
         print(MENU)
         choice = input("Enter your choice (1-7): ").strip()

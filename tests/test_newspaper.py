@@ -80,3 +80,13 @@ def test_menu_survives_bad_input(conn, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "Please enter a number between 1 and 7" in out
     assert "Please enter a whole number" in out
+
+
+@pytest.mark.parametrize("error", [EOFError, KeyboardInterrupt])
+def test_menu_exits_cleanly_when_input_ends(conn, monkeypatch, capsys, error):
+    def no_more_input(_prompt=""):
+        raise error
+
+    monkeypatch.setattr("builtins.input", no_more_input)
+    np_.menu(conn)
+    assert "Goodbye!" in capsys.readouterr().out
