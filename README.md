@@ -1,73 +1,48 @@
-# 📰 Online Newspaper Database – CMPE351 Project
+# Online Newspaper Database
 
-A fully normalized relational database system simulating the backend of an online newspaper.  
-This was developed as part of the CMPE351 (Database Systems) course at Istanbul Bilgi University.
+A normalized relational database for an online newspaper: authors write articles, administrators manage them, users subscribe, read and comment. Built on SQLite, with a small Python interface for creating, reading, updating and deleting records.
 
----
+Developed for CMPE351 (Database Systems) at Istanbul Bilgi University. The design (ER diagram, relational schema, normalization) is in `Online_Newspaper_Database_Report.pdf`.
 
-## 📘 Overview
+## Schema
 
-The system supports:
+`schema.sql` implements the report's relational schema:
 
-- **Users** who subscribe and read articles
-- **Authors** who write articles
-- **Articles** with categories and publication dates
-- **Administrators** who manage the content
-- **Comments** tied to articles
-- All relationships and constraints defined in a normalized schema
+| Table | Purpose |
+|-------|---------|
+| `AUTHOR`, `AUTHOR_TEL` | Authors; phone numbers split out as a multi-valued attribute |
+| `ARTICLE` | Articles with category and publication date |
+| `ADMINISTRATOR` | Administrators (passwords stored as hashes) |
+| `USER`, `SUBSCRIPTION_OWNS` | Readers and their subscriptions |
+| `Writes`, `ManagedBy`, `ReadBy` | Author–article, article–admin and user–article relationships |
+| `COMMENT`, `Has` | Comments and the articles they belong to |
 
----
+Primary and foreign keys are declared and enforced. Deleting a user also removes their reads and subscription (`ON DELETE CASCADE`).
 
-## 🧠 Concepts Demonstrated
+## Use it
 
-- ER Modeling
-- Relational Schema Design
-- Primary & Foreign Keys
-- Cardinality Mapping
-- Multi-valued Attribute Handling (Tel# separated from AUTHOR)
-- CRUD Operations via SQL + Python interface (in notebook)
-- Join queries & user-interactive menu system
+Requires Python 3.10+.
 
----
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-## 📂 Files in This Repo
+**Interactive menu:** `python newspaper.py`. It creates `online_newspaper.db` with sample data on the first run, then lets you list users and articles, add an article, change a category, delete a user, and run the join that shows who read what.
 
-| File | Description |
-|------|-------------|
-| `Cem_Akcicek_Database_Project.ipynb` | Full Python notebook with SQLite setup and CRUD interface |
-| `Online_Newspaper_Database_Report.pdf` | Report with ER diagram, schema, normalization, and constraints |
-| `schema.sql` | SQL-only version of the schema (for instant database setup) |
+**Notebook:** open `walkthrough.ipynb` in Jupyter from this folder, or in Google Colab. It builds the database in memory and runs the main queries.
 
----
+**Plain SQL:** run `schema.sql` in any SQLite tool, for example `sqlite3 news.db < schema.sql`.
 
-## 🧪 How to Use This Project
+## Tests
 
-### 🟢 Option 1 – Run the Notebook
+```bash
+pytest
+```
 
-1. Open `Cem_Akcicek_Database_Project.ipynb` in Google Colab or Jupyter
-2. Run all cells
-3. You’ll see:
-   - Tables created and filled with demo data
-   - A menu for CRUD operations
-   - A JOIN query showing what users read
+The tests check the schema file, that sample data is only added once, the CRUD operations, foreign key enforcement, the join queries, and that the menu copes with bad input.
 
-### 🟢 Option 2 – Use the SQL Schema Directly
+## Author
 
-1. Open a SQLite tool (like [DB Browser for SQLite](https://sqlitebrowser.org/) or VSCode with SQLite plugin)
-2. Create a new SQLite database
-3. Copy the contents of `schema.sql` and execute it
-4. Your schema is now live — you can add data and test joins manually
-
----
-
-## 📌 Notes
-
-This database project focuses on data modeling and basic operations. Some entities/relationships described in the report (e.g., `Writes`, `Has`, `ManagedBy`) are part of the design but not implemented in the current code version.
-
----
-
-## 👩‍💻 Author
-
-Cem Akçiçek  
-Student, Istanbul Bilgi University – Computer Engineering  
-GitHub: [cemakcck](https://github.com/cemakcck)
+Cem Akçiçek, with Ece Doğa Gül. Istanbul Bilgi University, Computer Engineering.

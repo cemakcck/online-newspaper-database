@@ -1,42 +1,76 @@
-{\rtf1\ansi\ansicpg1254\cocoartf2821
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+-- Online Newspaper Database (CMPE351): relational schema for SQLite.
+-- Follows the relational schema in Online_Newspaper_Database_Report.pdf.
 
-\f0\fs24 \cf0 CREATE TABLE IF NOT EXISTS AUTHOR (\
-    Author_ID INTEGER PRIMARY KEY,\
-    Name TEXT,\
-    Birth_Date TEXT,\
-    Sex TEXT,\
-    Email TEXT\
-);\
-\
-CREATE TABLE IF NOT EXISTS AUTHOR_TEL (\
-    Author_ID INTEGER,\
-    Tel TEXT,\
-    FOREIGN KEY (Author_ID) REFERENCES AUTHOR (Author_ID)\
-);\
-\
-CREATE TABLE IF NOT EXISTS ARTICLE (\
-    Article_ID INTEGER PRIMARY KEY,\
-    Title TEXT,\
-    Category TEXT,\
-    Publication_Date TEXT\
-);\
-\
-CREATE TABLE IF NOT EXISTS USER (\
-    User_ID INTEGER PRIMARY KEY,\
-    Subscription_Status TEXT,\
-    Email TEXT,\
-    Sex TEXT\
-);\
-\
-CREATE TABLE IF NOT EXISTS ReadBy (\
-    User_ID INTEGER,\
-    Article_ID INTEGER,\
-    FOREIGN KEY (User_ID) REFERENCES USER (User_ID),\
-    FOREIGN KEY (Article_ID) REFERENCES ARTICLE (Article_ID)\
-);\
-}
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS AUTHOR (
+    Author_ID   INTEGER PRIMARY KEY,
+    Name        TEXT NOT NULL,
+    Birth_Date  TEXT,
+    Sex         TEXT CHECK (Sex IN ('M', 'F')),
+    Email       TEXT NOT NULL UNIQUE
+);
+
+-- Multi-valued attribute Tel# moved into its own relation.
+CREATE TABLE IF NOT EXISTS AUTHOR_TEL (
+    Author_ID   INTEGER NOT NULL REFERENCES AUTHOR (Author_ID) ON DELETE CASCADE,
+    Tel         TEXT NOT NULL,
+    PRIMARY KEY (Author_ID, Tel)
+);
+
+CREATE TABLE IF NOT EXISTS ARTICLE (
+    Article_ID        INTEGER PRIMARY KEY,
+    Title             TEXT NOT NULL,
+    Category          TEXT NOT NULL,
+    Publication_Date  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ADMINISTRATOR (
+    Admin_ID       INTEGER PRIMARY KEY,
+    Password_Hash  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS USER (
+    User_ID              INTEGER PRIMARY KEY,
+    Subscription_Status  TEXT NOT NULL,
+    Email                TEXT NOT NULL UNIQUE,
+    Sex                  TEXT CHECK (Sex IN ('M', 'F'))
+);
+
+-- SUBSCRIPTION merged with the Owns relationship (each subscription belongs to one user).
+CREATE TABLE IF NOT EXISTS SUBSCRIPTION_OWNS (
+    Sub_ID    INTEGER PRIMARY KEY,
+    User_ID   INTEGER NOT NULL REFERENCES USER (User_ID) ON DELETE CASCADE,
+    Sub_Type  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Writes (
+    Author_ID   INTEGER NOT NULL REFERENCES AUTHOR (Author_ID) ON DELETE CASCADE,
+    Article_ID  INTEGER NOT NULL REFERENCES ARTICLE (Article_ID) ON DELETE CASCADE,
+    PRIMARY KEY (Author_ID, Article_ID)
+);
+
+CREATE TABLE IF NOT EXISTS ManagedBy (
+    Article_ID  INTEGER NOT NULL REFERENCES ARTICLE (Article_ID) ON DELETE CASCADE,
+    Admin_ID    INTEGER NOT NULL REFERENCES ADMINISTRATOR (Admin_ID) ON DELETE CASCADE,
+    PRIMARY KEY (Article_ID, Admin_ID)
+);
+
+CREATE TABLE IF NOT EXISTS ReadBy (
+    User_ID     INTEGER NOT NULL REFERENCES USER (User_ID) ON DELETE CASCADE,
+    Article_ID  INTEGER NOT NULL REFERENCES ARTICLE (Article_ID) ON DELETE CASCADE,
+    PRIMARY KEY (User_ID, Article_ID)
+);
+
+CREATE TABLE IF NOT EXISTS COMMENT (
+    Comment_ID  INTEGER PRIMARY KEY,
+    User_ID     INTEGER REFERENCES USER (User_ID) ON DELETE SET NULL,
+    Body        TEXT NOT NULL,
+    Created_At  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS Has (
+    Article_ID  INTEGER NOT NULL REFERENCES ARTICLE (Article_ID) ON DELETE CASCADE,
+    Comment_ID  INTEGER NOT NULL REFERENCES COMMENT (Comment_ID) ON DELETE CASCADE,
+    PRIMARY KEY (Article_ID, Comment_ID)
+);
